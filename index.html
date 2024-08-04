@@ -23,6 +23,7 @@
         .product {
             display: flex;
             justify-content: space-between;
+            align-items: center;
             margin-bottom: 1em;
             padding: 1em;
             background-color: white;
@@ -85,15 +86,15 @@
     </header>
     <main>
         <div class="product">
-            <span>제품 1</span>
+            <span>제품 1 - 10,000원</span>
             <button onclick="addToCart('제품 1', 10000)">장바구니에 추가</button>
         </div>
         <div class="product">
-            <span>제품 2</span>
+            <span>제품 2 - 20,000원</span>
             <button onclick="addToCart('제품 2', 20000)">장바구니에 추가</button>
         </div>
         <div class="product">
-            <span>제품 3</span>
+            <span>제품 3 - 30,000원</span>
             <button onclick="addToCart('제품 3', 30000)">장바구니에 추가</button>
         </div>
         <div class="cart">
@@ -136,13 +137,13 @@
                 const cartItemDiv = document.createElement('div');
                 cartItemDiv.className = 'cart-item';
                 cartItemDiv.innerHTML = `
-                    <span>${product.name}</span>
-                    <span>${product.price * product.quantity} 원</span>
+                    <span>${product.name} - ${product.price} 원</span>
                     <div class="quantity-controls">
                         <button onclick="changeQuantity(${index}, -1)">-</button>
                         <span>${product.quantity}</span>
                         <button onclick="changeQuantity(${index}, 1)">+</button>
                     </div>
+                    <span>${product.price * product.quantity} 원</span>
                 `;
                 cartItemsDiv.appendChild(cartItemDiv);
                 total += product.price * product.quantity;
