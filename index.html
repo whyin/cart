@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>내 웹 페이지</title>
+    <title>장바구니</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -20,34 +20,100 @@
         main {
             padding: 2em;
         }
-        footer {
-            background-color: #333;
-            color: white;
-            text-align: center;
+        .product {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1em;
             padding: 1em;
-            position: fixed;
-            width: 100%;
-            bottom: 0;
+            background-color: white;
+            border: 1px solid #ddd;
+        }
+        .cart {
+            margin-top: 2em;
+        }
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1em;
+            padding: 1em;
+            background-color: #fff8dc;
+            border: 1px solid #ddd;
+        }
+        .cart-total {
+            font-weight: bold;
+            text-align: right;
+        }
+        button {
+            padding: 0.5em 1em;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
         }
     </style>
 </head>
 <body>
     <header>
-        <h1>내 웹 페이지</h1>
+        <h1>장바구니</h1>
     </header>
     <main>
-        <h2>환영합니다!</h2>
-        <p>이것은 나의 첫 번째 웹 페이지입니다.</p>
-        <p>아래 링크들을 확인해보세요:</p>
-        <ul>
-            <li><a href="https://www.example.com" target="_blank">예제 사이트 방문하기</a></li>
-            <li><a href="https://www.w3schools.com" target="_blank">W3Schools에서 배우기</a></li>
-            <li><a href="mailto:someone@example.com">이메일 보내기</a></li>
-            <li><a href="files/sample.pdf" download>샘플 PDF 다운로드</a></li>
-        </ul>
+        <div class="product">
+            <span>제품 1</span>
+            <button onclick="addToCart('제품 1', 10000)">장바구니에 추가</button>
+        </div>
+        <div class="product">
+            <span>제품 2</span>
+            <button onclick="addToCart('제품 2', 20000)">장바구니에 추가</button>
+        </div>
+        <div class="product">
+            <span>제품 3</span>
+            <button onclick="addToCart('제품 3', 30000)">장바구니에 추가</button>
+        </div>
+        <div class="cart">
+            <h2>장바구니</h2>
+            <div id="cart-items"></div>
+            <div class="cart-total">
+                총합: <span id="cart-total">0</span> 원
+            </div>
+        </div>
     </main>
-    <footer>
-        <p>© 2024 내 웹 페이지. 모든 권리 보유.</p>
-    </footer>
+    <script>
+        let cart = [];
+
+        function addToCart(productName, productPrice) {
+            const product = { name: productName, price: productPrice };
+            cart.push(product);
+            updateCart();
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            updateCart();
+        }
+
+        function updateCart() {
+            const cartItemsDiv = document.getElementById('cart-items');
+            const cartTotalSpan = document.getElementById('cart-total');
+            cartItemsDiv.innerHTML = '';
+            let total = 0;
+
+            cart.forEach((product, index) => {
+                const cartItemDiv = document.createElement('div');
+                cartItemDiv.className = 'cart-item';
+                cartItemDiv.innerHTML = `
+                    <span>${product.name}</span>
+                    <span>${product.price} 원</span>
+                    <button onclick="removeFromCart(${index})">제거</button>
+                `;
+                cartItemsDiv.appendChild(cartItemDiv);
+                total += product.price;
+            });
+
+            cartTotalSpan.innerText = total;
+        }
+    </script>
 </body>
 </html>
