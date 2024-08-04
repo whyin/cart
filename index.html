@@ -37,22 +37,24 @@
             padding: 1em;
             background-color: #fff8dc;
         }
-        .cart-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1em;
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
             padding: 1em;
-            background-color: #fff;
             border: 1px solid #ddd;
+            text-align: center;
         }
         .cart-total {
             font-weight: bold;
             text-align: right;
+            margin-top: 1em;
         }
         .quantity-controls {
             display: flex;
             align-items: center;
+            justify-content: center;
         }
         .quantity-controls button {
             padding: 0.5em;
@@ -99,7 +101,17 @@
         </div>
         <div class="cart">
             <h2>장바구니</h2>
-            <div id="cart-items"></div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>상품 이름</th>
+                        <th>상품 가격</th>
+                        <th>수량</th>
+                        <th>합계</th>
+                    </tr>
+                </thead>
+                <tbody id="cart-items"></tbody>
+            </table>
             <div class="cart-total">
                 합계 금액: <span id="cart-total">0</span> 원
             </div>
@@ -128,24 +140,26 @@
         }
 
         function updateCart() {
-            const cartItemsDiv = document.getElementById('cart-items');
+            const cartItemsTbody = document.getElementById('cart-items');
             const cartTotalSpan = document.getElementById('cart-total');
-            cartItemsDiv.innerHTML = '';
+            cartItemsTbody.innerHTML = '';
             let total = 0;
 
             cart.forEach((product, index) => {
-                const cartItemDiv = document.createElement('div');
-                cartItemDiv.className = 'cart-item';
-                cartItemDiv.innerHTML = `
-                    <span>${product.name} - ${product.price} 원</span>
-                    <div class="quantity-controls">
-                        <button onclick="changeQuantity(${index}, -1)">-</button>
-                        <span>${product.quantity}</span>
-                        <button onclick="changeQuantity(${index}, 1)">+</button>
-                    </div>
-                    <span>${product.price * product.quantity} 원</span>
+                const cartItemRow = document.createElement('tr');
+                cartItemRow.innerHTML = `
+                    <td>${product.name}</td>
+                    <td>${product.price} 원</td>
+                    <td>
+                        <div class="quantity-controls">
+                            <button onclick="changeQuantity(${index}, -1)">-</button>
+                            <span>${product.quantity}</span>
+                            <button onclick="changeQuantity(${index}, 1)">+</button>
+                        </div>
+                    </td>
+                    <td>${product.price * product.quantity} 원</td>
                 `;
-                cartItemsDiv.appendChild(cartItemDiv);
+                cartItemsTbody.appendChild(cartItemRow);
                 total += product.price * product.quantity;
             });
 
