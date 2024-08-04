@@ -30,18 +30,42 @@
         }
         .cart {
             margin-top: 2em;
+            max-height: 300px;
+            overflow-y: scroll;
+            border: 1px solid #ddd;
+            padding: 1em;
+            background-color: #fff8dc;
         }
         .cart-item {
             display: flex;
             justify-content: space-between;
+            align-items: center;
             margin-bottom: 1em;
             padding: 1em;
-            background-color: #fff8dc;
+            background-color: #fff;
             border: 1px solid #ddd;
         }
         .cart-total {
             font-weight: bold;
             text-align: right;
+        }
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+        }
+        .quantity-controls button {
+            padding: 0.5em;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin: 0 0.5em;
+        }
+        .quantity-controls button:hover {
+            background-color: #45a049;
+        }
+        .quantity-controls span {
+            margin: 0 0.5em;
         }
         button {
             padding: 0.5em 1em;
@@ -76,7 +100,7 @@
             <h2>장바구니</h2>
             <div id="cart-items"></div>
             <div class="cart-total">
-                총합: <span id="cart-total">0</span> 원
+                합계 금액: <span id="cart-total">0</span> 원
             </div>
         </div>
     </main>
@@ -84,13 +108,21 @@
         let cart = [];
 
         function addToCart(productName, productPrice) {
-            const product = { name: productName, price: productPrice };
-            cart.push(product);
+            const productIndex = cart.findIndex(product => product.name === productName);
+            if (productIndex > -1) {
+                cart[productIndex].quantity += 1;
+            } else {
+                cart.push({ name: productName, price: productPrice, quantity: 1 });
+            }
             updateCart();
         }
 
-        function removeFromCart(index) {
-            cart.splice(index, 1);
+        function changeQuantity(index, delta) {
+            const product = cart[index];
+            product.quantity = Math.max(0, product.quantity + delta);
+            if (product.quantity === 0) {
+                cart.splice(index, 1);
+            }
             updateCart();
         }
 
@@ -105,11 +137,15 @@
                 cartItemDiv.className = 'cart-item';
                 cartItemDiv.innerHTML = `
                     <span>${product.name}</span>
-                    <span>${product.price} 원</span>
-                    <button onclick="removeFromCart(${index})">제거</button>
+                    <span>${product.price * product.quantity} 원</span>
+                    <div class="quantity-controls">
+                        <button onclick="changeQuantity(${index}, -1)">-</button>
+                        <span>${product.quantity}</span>
+                        <button onclick="changeQuantity(${index}, 1)">+</button>
+                    </div>
                 `;
                 cartItemsDiv.appendChild(cartItemDiv);
-                total += product.price;
+                total += product.price * product.quantity;
             });
 
             cartTotalSpan.innerText = total;
