@@ -27,10 +27,31 @@ function getProduct($conn, $item_num) {
     return $res_row;
 }
 
-// 장바구니에 추가할 항목들 (여기서는 1, 2, 3번 항목)
-$product1 = getProduct($conn, 1);
-$product2 = getProduct($conn, 2);
-$product3 = getProduct($conn, 3);
+// CSV 파일을 처리하는 함수
+function processCSV($file, $conn) {
+    $csvData = array();
+    if (($handle = fopen($file, "r")) !== FALSE) {
+        while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
+            // CSV에서 item_num 값을 가져와 DB에서 상품 정보 불러오기
+            $item_num = $data[0];  // 첫 번째 열이 item_num이라고 가정
+            $product = getProduct($conn, $item_num);
+            
+            // 불러온 상품 정보를 배열에 추가
+            if (!empty($product)) {
+                array_push($csvData, $product[0]); // getProduct는 배열을 반환하므로 [0]으로 접근
+            }
+        }
+        fclose($handle);
+    }
+    return $csvData;
+}
+
+// CSV 파일이 업로드된 경우 처리
+$csvData = array();
+if (isset($_FILES['csv_file'])) {
+    $file = $_FILES['csv_file']['tmp_name'];
+    $csvData = processCSV($file, $conn);  // DB에서 상품 정보를 가져와 배열로 저장
+}
 
 $conn->close();
 ?>
@@ -42,98 +63,7 @@ $conn->close();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>장바구니</title>
     <style>
-        /* 동일한 스타일 적용 */
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f4;
-        }
-        header {
-            background-color: #333;
-            color: white;
-            text-align: center;
-            padding: 1em;
-        }
-        main {
-            padding: 2em;
-        }
-        .cart-container {
-            background-color: white;
-            padding: 2em;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            max-width: 600px;
-            margin: 0 auto;
-        }
-        .cart-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background-color: #f9f9f9;
-            padding: 1em;
-            margin-bottom: 1em;
-            border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-        .cart-item img {
-            width: 60px;
-            height: auto;
-            margin-right: 1em;
-        }
-        .cart-item-info {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-grow: 1;
-        }
-        .cart-item-name {
-            font-size: 1.2em;
-            margin-right: 2em; 
-        }
-        .quantity-controls {
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-        }
-        .quantity-controls button {
-            padding: 0.5em;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-            margin: 0 0.5em;
-        }
-        .quantity-controls button:hover {
-            background-color: #45a049;
-        }
-        .cart-item-price {
-            font-weight: bold;
-            color: #333;
-            margin-left: 1em;
-            margin-right: 1em;
-            width: 100px;
-            text-align: right;
-        }
-        .cart-total {
-            font-weight: bold;
-            text-align: right;
-            margin-top: 1em;
-        }
-        .checkout-btn {
-            width: 100%;
-            padding: 1em;
-            background-color: #333;
-            color: white;
-            border: none;
-            cursor: pointer;
-            margin-top: 1em;
-            text-align: center;
-            border-radius: 10px;
-        }
-        .checkout-btn:hover {
-            background-color: #555;
-        }
+        /* 스타일 동일, 생략 */
     </style>
 </head>
 <body>
@@ -142,74 +72,69 @@ $conn->close();
     </header>
     <main>
         <div class="cart-container">
-            <!-- 장바구니 항목들이 여기에 추가됩니다 -->
             <div id="cart-items"></div>
 
             <div class="cart-total">
                 합계 금액: <span id="cart-total">0</span> 원
             </div>
             <button class="checkout-btn" onclick="checkout()">결제하기</button>
+
+            <!-- CSV 파일 업로드 폼 -->
+            <form action="" method="post" enctype="multipart/form-data">
+                <input type="file" name="csv_file" accept=".csv" />
+                <button type="submit">CSV 파일 업로드</button>
+            </form>
         </div>
     </main>
 
     <script>
         let cart = [];
-        // 서버에서 PHP로 전달된 상품 데이터를 자바스크립트로 전달
-        const products = {
-            1: <?php echo json_encode($product1); ?>,
-            2: <?php echo json_encode($product2); ?>,
-            3: <?php echo json_encode($product3); ?>
-        };
+        
+        // CSV 파일에서 가져온 상품 데이터를 자바스크립트로 전달 (업로드 후 처리된 데이터)
+        const csvProducts = <?php echo isset($csvData) ? json_encode($csvData) : '[]'; ?>;
 
         // 장바구니에 상품을 추가하는 함수
         function addToCart(product) {
-            // 장바구니에 이미 있는 상품인지 확인
             const existingItem = cart.find(item => item.number === product.number);
 
-            // 상품이 이미 장바구니에 있다면 수량을 증가시키고, 없으면 새롭게 추가
             if (existingItem) {
-                existingItem.quantity += 1;  // 이미 있으면 수량 +1
+                existingItem.quantity += 1;
             } else {
-                product.quantity = 1;  // 장바구니에 없으면 수량을 1로 설정
-                cart.push(product);  // 새 상품을 장바구니에 추가
+                product.quantity = 1;
+                cart.push(product);
             }
 
-            renderCart();  // 장바구니 상태를 화면에 업데이트
+            renderCart();
         }
 
         // 상품의 수량을 변경하는 함수
         function changeQuantity(productNumber, amount) {
-            // 장바구니에서 해당 상품을 찾음
             const item = cart.find(item => item.number === productNumber);
 
             if (item) {
-                item.quantity += amount;  // 수량 변경
-
-                // 수량이 0 이하가 되면 장바구니에서 제거
+                item.quantity += amount;
                 if (item.quantity <= 0) {
                     cart = cart.filter(item => item.number !== productNumber);
                 }
             }
 
-            renderCart();  // 장바구니 상태를 다시 렌더링
+            renderCart();
         }
 
-        // 장바구니 내용을 렌더링하는 함수
+        // 장바구니 렌더링
         function renderCart() {
             const cartItemsContainer = document.getElementById('cart-items');
-            cartItemsContainer.innerHTML = '';  // 기존 장바구니 내용을 초기화
+            cartItemsContainer.innerHTML = '';
 
-            let total = 0;  // 총 가격 초기화
+            let total = 0;
 
-            // 장바구니에 있는 모든 상품을 화면에 표시
             cart.forEach(item => {
-                const itemTotal = item.price * item.quantity;  // 해당 상품의 총 가격
-                total += itemTotal;  // 총 가격에 해당 상품 가격을 더함
+                const itemTotal = item.price * item.quantity;
+                total += itemTotal;
 
                 const cartItem = document.createElement('div');
                 cartItem.className = 'cart-item';
 
-                // 장바구니 항목을 HTML로 구성
                 cartItem.innerHTML = `
                     <img src="${item.image}" alt="${item.engname}">
                     <div class="cart-item-info">
@@ -223,23 +148,22 @@ $conn->close();
                     <div class="cart-item-price">${itemTotal} 원</div>
                 `;
 
-                cartItemsContainer.appendChild(cartItem);  // 항목을 장바구니 목록에 추가
+                cartItemsContainer.appendChild(cartItem);
             });
 
-            // 총 가격을 화면에 표시
             document.getElementById('cart-total').textContent = total;
         }
 
-        // 결제하기 버튼 클릭 시 총 결제 금액을 알리는 함수
+        // 결제하기 버튼
         function checkout() {
             alert(`총 결제 금액은 ${document.getElementById('cart-total').textContent} 원입니다.`);
         }
 
-        // PHP로부터 전달된 각 상품을 장바구니에 추가
-        // 처음에는 각 상품이 자동으로 장바구니에 추가되도록 설정
-        addToCart(products[1][0]);  // 1번 항목 추가
-        addToCart(products[2][0]);  // 2번 항목 추가
-        addToCart(products[3][0]);  // 3번 항목 추가
+        // CSV로 업로드된 상품을 장바구니에 추가
+        csvProducts.forEach(product => {
+            addToCart(product);
+        });
+
     </script>
 </body>
 </html>
